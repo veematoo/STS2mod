@@ -1,4 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+	<!-- PathPlanner: Harmony + direct sts2 refs; no BaseLib compile dependency (see docs/BaseLib-roadmap.md). -->
 	<!-- Import user-specific paths -->
 	<Import Project="local.props" Condition="Exists('local.props')" />
 	
@@ -7,12 +8,15 @@
 		<PlatformTarget>x64</PlatformTarget>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<!-- Decompile + MCP tooling live under the repo but are not part of the mod assembly. -->
+		<DefaultItemExcludes>$(DefaultItemExcludes);STS2-decompiled/**;STS2 Modding MCP v3.8.0/**</DefaultItemExcludes>
 		
 		<!-- ↓ MOD METADATA - Change these! -->
-		<ModName>ExampleMod</ModName>
-		<ModDisplayName>Example Mod</ModDisplayName>
-		<ModAuthor>lamali</ModAuthor>
-		<ModVersion>1.0.0</ModVersion>
+		<ModName>PathPlanner</ModName>
+		<ModDisplayName>Path Planner</ModDisplayName>
+		<ModAuthor>frank</ModAuthor>
+		<ModDescription>Shows min/max elites, shops, rests, monsters and unknowns for every possible path through the act map.</ModDescription>
+		<ModVersion>0.1.0</ModVersion>
 		
 		<AssemblyName>$(ModName)</AssemblyName>
 		<Version>$(ModVersion)</Version>
@@ -22,7 +26,13 @@
 		<GodotExePath Condition="'$(GodotExePath)' == ''">godot</GodotExePath>
 		
 		<!-- Derived paths -->
-		<ModsOutputDir>$(STS2GamePath)\mods\$(ModName)</ModsOutputDir>
+		<ModsOutputDir>$(STS2GamePath)\mods</ModsOutputDir>
+		<!-- Always copy dll+json+pck here for sharing (override in local.props or -p:FriendModsOutputDir=...) -->
+		<FriendModsOutputDir Condition="'$(FriendModsOutputDir)' == ''">$(ProjectDir)dist\PathPlanner-friend</FriendModsOutputDir>
+		<!-- Always mirrored here even if local.props overrides FriendModsOutputDir (friend-share drop). -->
+		<FriendDistDir>$(ProjectDir)dist\PathPlanner-friend</FriendDistDir>
+		<!-- Friend share: Windows files at root; Linux .pck + same dll/json under linux\ (override in local.props). -->
+		<FriendLinuxModsOutputDir Condition="'$(FriendLinuxModsOutputDir)' == ''">$(FriendModsOutputDir)\linux</FriendLinuxModsOutputDir>
 		<GameDataDir>$(STS2GamePath)\data_sts2_windows_x86_64</GameDataDir>
 		<PackProject>$(ProjectDir)pack</PackProject>
 	</PropertyGroup>
@@ -73,10 +83,52 @@ project/assembly_name="$(ModName)"
 		<WriteLinesToFile File="$(ModManifestPath)" Lines="$(ModManifestContent)" Overwrite="true" Encoding="UTF-8" />
 		<Message Text="Generated mod_manifest.json" Importance="high" />
 	</Target>
+
+	<!-- Generate STS2 beta descriptor file before build -->
+	<Target Name="GenerateModJson" BeforeTargets="BeforeBuild">
+		<PropertyGroup>
+			<ModJsonPath>$(ProjectDir)$(ModName).json</ModJsonPath>
+			<ModJsonContent>{
+  "id": "$(ModName)",
+  "name": "$(ModDisplayName)",
+  "author": "$(ModAuthor)",
+  "description": "$(ModDescription)",
+  "version": "$(ModVersion)",
+  "has_pck": true,
+  "has_dll": true,
+  "dependencies": [],
+  "affects_gameplay": true
+}</ModJsonContent>
+		</PropertyGroup>
+
+		<WriteLinesToFile File="$(ModJsonPath)" Lines="$(ModJsonContent)" Overwrite="true" Encoding="UTF-8" />
+		<Message Text="Generated $(ModName).json" Importance="high" />
+	</Target>
 	
+	<!-- After every successful build: pack to output dir, then deploy the same dll+json+pck to Steam mods and friend share folder. -->
 	<Target Name="PostBuild" AfterTargets="Build">
-		<MakeDir Directories="$(ModsOutputDir)" />
-		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModsOutputDir)" />
-		<Exec Command="&quot;$(GodotExePath)&quot; --headless --path &quot;$(PackProject)&quot; --export-pack &quot;Windows Desktop&quot; &quot;$(ModsOutputDir)\$(ModName).pck&quot;" />
+		<PropertyGroup>
+			<StagedModPck>$(TargetDir)$(ModName).pck</StagedModPck>
+			<!-- Godot export with path=pack resolves relative output under pack/; stage .pck in TargetDir then copy. -->
+			<StagedLinuxModPck>$(TargetDir)$(ModName).linux.pck</StagedLinuxModPck>
+			<FriendLinuxModPck>$(FriendLinuxModsOutputDir)\$(ModName).pck</FriendLinuxModPck>
+		</PropertyGroup>
+		<MakeDir Directories="$(ModsOutputDir);$(FriendModsOutputDir);$(FriendDistDir);$(FriendLinuxModsOutputDir)" />
+		<Exec Command="&quot;$(GodotExePath)&quot; --headless --path &quot;$(PackProject)&quot; --export-pack &quot;Windows Desktop&quot; &quot;$(StagedModPck)&quot;" />
+		<Exec Command="&quot;$(GodotExePath)&quot; --headless --path &quot;$(PackProject)&quot; --export-pack &quot;Linux Desktop&quot; &quot;$(StagedLinuxModPck)&quot;" Condition="'$(BuildFriendLinuxPack)' != 'false'" />
+		<Copy SourceFiles="$(StagedLinuxModPck)" DestinationFiles="$(FriendLinuxModPck)" SkipUnchangedFiles="false" Condition="'$(BuildFriendLinuxPack)' != 'false' And '$(FriendModsOutputDir)' != ''" />
+		<ItemGroup>
+			<ModDeployFiles Include="$(TargetPath)" />
+			<ModDeployFiles Include="$(ModJsonPath)" />
+			<ModDeployFiles Include="$(StagedModPck)" />
+		</ItemGroup>
+		<!-- Deploy to repo dist / friend folders first so a locked Steam mods DLL does not skip these. -->
+		<Copy SourceFiles="@(ModDeployFiles)" DestinationFolder="$(FriendDistDir)" SkipUnchangedFiles="false" />
+		<Copy SourceFiles="@(ModDeployFiles)" DestinationFolder="$(FriendModsOutputDir)" Condition="'$(FriendModsOutputDir)' != ''" SkipUnchangedFiles="false" />
+		<!-- Steam locks PathPlanner.dll while the game is running; do not fail the build when copy is blocked. -->
+		<Copy SourceFiles="@(ModDeployFiles)" DestinationFolder="$(ModsOutputDir)" SkipUnchangedFiles="false" ContinueOnError="true" />
+		<Copy SourceFiles="$(TargetPath);$(ModJsonPath)" DestinationFolder="$(FriendLinuxModsOutputDir)" Condition="'$(FriendModsOutputDir)' != '' And '$(BuildFriendLinuxPack)' != 'false'" SkipUnchangedFiles="false" />
+		<Message Text="Deployed $(ModName) to $(ModsOutputDir); friend share: $(FriendDistDir); linux: $(FriendLinuxModsOutputDir)" Importance="high" Condition="'$(BuildFriendLinuxPack)' != 'false'" />
+		<Message Text="Deployed $(ModName) to $(ModsOutputDir); friend share: $(FriendDistDir) (skipped linux pack)" Importance="high" Condition="'$(BuildFriendLinuxPack)' == 'false'" />
 	</Target>
 </Project>

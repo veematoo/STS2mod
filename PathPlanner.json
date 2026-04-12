@@ -1,0 +1,11 @@
+﻿{
+  "id": "PathPlanner",
+  "name": "Path Planner",
+  "author": "frank",
+  "description": "Shows min/max elites, shops, rests, monsters and unknowns for every possible path through the act map.",
+  "version": "0.1.0",
+  "has_pck": true,
+  "has_dll": true,
+  "dependencies": [],
+  "affects_gameplay": true
+}

@@ -1,8 +1,8 @@
 ﻿config_version=5
 
 [application]
-config/name="ExampleMod"
+config/name="PathPlanner"
 config/features=PackedStringArray("4.5", "Forward Plus")
 
 [dotnet]
-project/assembly_name="ExampleMod"
+project/assembly_name="PathPlanner"

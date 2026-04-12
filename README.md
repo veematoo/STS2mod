@@ -1,9 +1,39 @@
-# ExampleMod
+# PathPlanner (STS2 mod)
 
-Example mod for Slay the Spire 2!
+Slay the Spire 2 mod: act-map path summary, optional merchant/card win-rate hints, and related UI. Built as **PathPlanner** (`PathPlanner.dll` / `PathPlanner.pck`).
 
 ---
 
+## GitHub and version control
+
+This folder is a **Git** repo. The default remote **`origin`** may still point at the template repo (`lamali292/sts2_example_mod`). Use one of these:
+
+**Path A — You push to that repo**  
+If you have collaborator access, commit locally and run `git push origin main`.
+
+**Path B — Your own repository (typical)**  
+1. On [GitHub](https://github.com/new), create an empty repository under your account (e.g. `PathPlanner` or `sts2-path-planner`).
+2. Point `origin` at it (replace `YOUR_USERNAME` and `YOUR_REPO`):
+
+```powershell
+git remote set-url origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
+git push -u origin main
+```
+
+3. Optional: keep the template as **`upstream`** for pulling updates:
+
+```powershell
+git remote add upstream https://github.com/lamali292/sts2_example_mod.git
+```
+
+**Authentication**
+
+- **HTTPS:** use a [Personal Access Token (classic)](https://github.com/settings/tokens) with the `repo` scope when Git prompts for a password (GitHub does not accept your account password for Git).
+- **SSH:** [add an SSH key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) to GitHub and use `git@github.com:YOUR_USERNAME/YOUR_REPO.git` as the remote URL.
+
+After commits are created locally, run **`git push -u origin main`** from this folder in a normal terminal (or Cursor’s Git UI) so **Git Credential Manager** or SSH can sign in—unattended pushes often hang waiting for that prompt.
+
+---
 
 ## Development Setup
 
@@ -21,9 +51,10 @@ Before you begin, ensure you have:
 
 #### 1. Clone the Repository
 ```bash
-git clone https://github.com/lamali292/sts2_example_mod.git
-cd sts2_example_mod
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+cd YOUR_REPO
 ```
+(Or clone the template: `https://github.com/lamali292/sts2_example_mod.git` and then `git remote set-url origin` to your fork as above.)
 
 #### 2. Configure Your Paths
 
@@ -63,13 +94,18 @@ Press **Ctrl+Shift+B** or click **Build → Build Solution**
 
 The mod will **automatically** install to:
 
-Slay the Spire 2/mods/ExampleMod/  
-├── ExampleMod.dll  
-└── ExampleMod.pck  
+`Slay the Spire 2\mods\` (see `ExampleMod.csproj` PostBuild targets for `PathPlanner.dll`, `PathPlanner.json`, and `.pck`). 
 
 
-can be changed in ExampleMod.csproj 
+---
 
+## Path Planner settings
+
+In-game: click the **PP** button (bottom-left) to open toggles for map overlay, win-rate lines, partner UI, and HP preview. **Esc** or **Close** / backdrop dismisses the panel. Settings are saved to:
+
+`%AppData%\.sts2mods\PathPlanner\config.json`
+
+You can edit that file directly when the game is not running; a cold restart applies manual edits reliably.
 
 ---
 

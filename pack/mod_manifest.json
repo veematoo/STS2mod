@@ -1,6 +1,6 @@
 ﻿{
-  "pck_name": "ExampleMod",
-  "name": "Example Mod",
-  "author": "lamali",
-  "version": "1.0.0"
+  "pck_name": "PathPlanner",
+  "name": "Path Planner",
+  "author": "frank",
+  "version": "0.1.0"
 }

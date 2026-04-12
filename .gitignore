@@ -1,6 +1,12 @@
 # User-specific build configuration
 local.props
 
+# Scratch dotnet new template compare (see docs/BaseLib-roadmap.md)
+_dev/
+
+# STS2 Modding MCP: decompiled game source (large; optional local Roslyn index)
+STS2-decompiled/
+
 
 *.import
 # Build outputs
@@ -11,6 +17,16 @@ obj/
 
 # Godot generated files
 pack/.godot/
+
+# Friend-share / local deploy copies (rebuild anytime)
+dist/
+
+# Cursor IDE (local only)
+.cursor/
+
+# Bundled MCP / tooling archive — large; optional local unpack
+STS2 Modding MCP v3.8.0/
+STS2 Modding MCP v3.8.0.zip
 
 local.props
 
