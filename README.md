@@ -33,6 +33,11 @@ git remote add upstream https://github.com/lamali292/sts2_example_mod.git
 
 After commits are created locally, run **`git push -u origin main`** from this folder in a normal terminal (or Cursor’s Git UI) so **Git Credential Manager** or SSH can sign in—unattended pushes often hang waiting for that prompt.
 
+### Releases and versioning
+
+- **Single source of truth:** set **`ModVersion`** in [`ExampleMod.csproj`](ExampleMod.csproj); build regenerates `PathPlanner.json` and `pack/mod_manifest.json`.
+- **Process:** see [`docs/releasing.md`](docs/releasing.md) and keep [`CHANGELOG.md`](CHANGELOG.md) up to date; tag releases as `v0.1.0`, etc.
+
 ---
 
 ## Development Setup
